@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: iwm_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: workflow_db
+      POSTGRES_USER: workflow_user
+      POSTGRES_PASSWORD: workflow_pass
+    ports:
+      - "5432:5432"
+
+  backend:
+    build:
+      context: ./backend
+      args:
+        DEV: "true"
+    container_name: iwm_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/src:/backend/src
+    command: >
+      sh -c "python manage.py wait_for_db &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    environment:
+      DB_HOST: db
+      DB_NAME: workflow_db
+      DB_USER: workflow_user
+      DB_PASS: workflow_pass
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
