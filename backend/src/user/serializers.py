@@ -37,7 +37,8 @@ class AuthTokenSerializer(TokenObtainPairSerializer):
 
 
 class LogoutSerializer(serializers.Serializer):
-    """Serializer for logging out a user by blacklisting their refresh token."""
+    """Serializer for logging out a user by blacklisting
+    their refresh token."""
     refresh = serializers.CharField()
 
     def save(self, **kwargs):

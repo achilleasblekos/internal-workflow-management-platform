@@ -23,7 +23,8 @@ API_PREFIX = f'api/{API_VERSION}/'
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path(f'{API_PREFIX}schema/', SpectacularAPIView.as_view(), name='api-schema'),
+    path(f'{API_PREFIX}schema/',
+         SpectacularAPIView.as_view(), name='api-schema'),
     path(f'{API_PREFIX}docs/',
          SpectacularSwaggerView.as_view(url_name='api-schema'),
          name='api-docs'),
