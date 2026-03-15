@@ -130,7 +130,9 @@ def task_board_view(request):
     page_size = max(1, min(page_size, 100))
 
     def paginate_column(status_value, page_param_name):
-        column_qs = queryset.filter(status=status_value).order_by('-created_at', '-id')
+        column_qs = queryset.filter(
+            status=status_value,
+            ).order_by('-created_at', '-id')
         paginator = Paginator(column_qs, page_size)
 
         try:
@@ -177,7 +179,9 @@ def task_board_view(request):
 
     total = queryset.count()
     done_count = status_counts.get(Task.Status.DONE, 0)
-    completion_percentage = round((done_count / total) * 100, 2) if total else 0
+    completion_percentage = (
+        round((done_count / total) * 100, 2) if total else 0
+    )
 
     return Response({
         'filters': {
@@ -201,7 +205,9 @@ def task_board_view(request):
         },
         'columns': {
             'TO_DO': paginate_column(Task.Status.TO_DO, 'page_todo'),
-            'IN_PROGRESS': paginate_column(Task.Status.IN_PROGRESS, 'page_in_progress'),
+            'IN_PROGRESS': paginate_column(
+                Task.Status.IN_PROGRESS,
+                'page_in_progress'),
             'DONE': paginate_column(Task.Status.DONE, 'page_done'),
         },
     })
@@ -249,7 +255,9 @@ def task_summary_view(request):
 
     total = queryset.count()
     done_count = status_counts.get(Task.Status.DONE, 0)
-    completion_percentage = round((done_count / total) * 100, 2) if total else 0
+    completion_percentage = (
+        round((done_count / total) * 100, 2) if total else 0
+    )
 
     return Response({
         'total': total,

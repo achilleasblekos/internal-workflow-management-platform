@@ -53,5 +53,6 @@ class TaskAdmin(admin.ModelAdmin):
     list_filter = ['status', 'priority']
     search_fields = ['title', 'description', 'user__email', 'user__name']
 
+
 admin.site.register(models.User, UserAdmin)
 admin.site.register(models.Task, TaskAdmin)

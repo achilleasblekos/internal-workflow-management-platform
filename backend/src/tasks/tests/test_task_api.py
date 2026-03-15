@@ -86,7 +86,9 @@ class PrivateTaskApiTests(TestCase):
         self.assertIn('results', res.data)
         self.assertEqual(res.data['count'], 2)
 
-        tasks = Task.objects.filter(user=self.user).order_by('-created_at', '-id')
+        tasks = Task.objects.filter(
+            user=self.user,
+            ).order_by('-created_at', '-id')
         serializer = TaskSerializer(tasks, many=True)
         self.assertEqual(res.data['results'], serializer.data)
 
@@ -295,7 +297,10 @@ class PrivateTaskApiTests(TestCase):
 
     def test_board_endpoint_returns_three_columns(self):
         create_task(user=self.user, title='Todo 1', status=Task.Status.TO_DO)
-        create_task(user=self.user, title='In Progress 1', status=Task.Status.IN_PROGRESS)
+        create_task(
+            user=self.user,
+            title='In Progress 1',
+            status=Task.Status.IN_PROGRESS)
         create_task(user=self.user, title='Done 1', status=Task.Status.DONE)
 
         res = self.client.get(BOARD_URL)
@@ -368,9 +373,21 @@ class PrivateTaskApiTests(TestCase):
         self.assertGreaterEqual(res.data['columns']['TO_DO']['total_pages'], 3)
 
     def test_summary_endpoint(self):
-        create_task(user=self.user, status=Task.Status.TO_DO, priority=Task.Priority.MEDIUM)
-        create_task(user=self.user, status=Task.Status.IN_PROGRESS, priority=Task.Priority.HIGH)
-        create_task(user=self.user, status=Task.Status.DONE, priority=Task.Priority.LOW)
+        create_task(
+            user=self.user,
+            status=Task.Status.TO_DO,
+            priority=Task.Priority.MEDIUM,
+        )
+        create_task(
+            user=self.user,
+            status=Task.Status.IN_PROGRESS,
+            priority=Task.Priority.HIGH,
+        )
+        create_task(
+            user=self.user,
+            status=Task.Status.DONE,
+            priority=Task.Priority.LOW,
+        )
 
         res = self.client.get(SUMMARY_URL)
 

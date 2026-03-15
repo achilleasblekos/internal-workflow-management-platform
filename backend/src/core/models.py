@@ -114,11 +114,17 @@ class Task(models.Model):
             return
 
         previous = Task.objects.get(pk=self.pk)
-        allowed = self.valid_status_transitions().get(previous.status, {previous.status})
+        allowed = self.valid_status_transitions().get(
+            previous.status,
+            {previous.status},
+        )
 
         if self.status not in allowed:
             raise ValidationError({
-                'status': f'Invalid status transition from {previous.status} to {self.status}.'
+                'status': (
+                    'Invalid status transition from '
+                    f'{previous.status} to {self.status}.'
+                )
             })
 
     def save(self, *args, **kwargs):
