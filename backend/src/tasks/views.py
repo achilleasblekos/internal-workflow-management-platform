@@ -3,6 +3,12 @@ Views for task APIs.
 """
 from django.core.paginator import EmptyPage, Paginator
 from django.db.models import Count, Q
+from drf_spectacular.utils import (
+    OpenApiParameter,
+    OpenApiResponse,
+    OpenApiTypes,
+    extend_schema,
+)
 from rest_framework import generics, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
@@ -64,6 +70,60 @@ class TaskQueryMixin:
         return queryset
 
 
+@extend_schema(
+    parameters=[
+        OpenApiParameter(
+            name='search',
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+            description='Search in task title and description.',
+        ),
+        OpenApiParameter(
+            name='priority',
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+            enum=['LOW', 'MEDIUM', 'HIGH'],
+            description='Filter tasks by priority.',
+        ),
+        OpenApiParameter(
+            name='status',
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+            enum=['TO_DO', 'IN_PROGRESS', 'DONE'],
+            description='Filter tasks by status.',
+        ),
+        OpenApiParameter(
+            name='ordering',
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+            enum=[
+                'title',
+                '-title',
+                'created_at',
+                '-created_at',
+                'modified_at',
+                '-modified_at',
+                'priority',
+                '-priority',
+                'status',
+                '-status',
+            ],
+            description='Order results by field.',
+        ),
+        OpenApiParameter(
+            name='page',
+            type=OpenApiTypes.INT,
+            location=OpenApiParameter.QUERY,
+            description='Page number.',
+        ),
+        OpenApiParameter(
+            name='page_size',
+            type=OpenApiTypes.INT,
+            location=OpenApiParameter.QUERY,
+            description='Number of results per page.',
+        ),
+    ],
+)
 class TaskListCreateView(TaskQueryMixin, generics.ListCreateAPIView):
     """List and create tasks."""
     serializer_class = TaskSerializer
@@ -89,6 +149,50 @@ class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
         return Task.objects.filter(user=self.request.user)
 
 
+@extend_schema(
+    parameters=[
+        OpenApiParameter(
+            name='search',
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+            description='Search in task title and description.',
+        ),
+        OpenApiParameter(
+            name='priority',
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+            enum=['LOW', 'MEDIUM', 'HIGH'],
+            description='Filter board tasks by priority.',
+        ),
+        OpenApiParameter(
+            name='page_size',
+            type=OpenApiTypes.INT,
+            location=OpenApiParameter.QUERY,
+            description='Number of tasks per board column page.',
+        ),
+        OpenApiParameter(
+            name='page_todo',
+            type=OpenApiTypes.INT,
+            location=OpenApiParameter.QUERY,
+            description='Page number for TO_DO column.',
+        ),
+        OpenApiParameter(
+            name='page_in_progress',
+            type=OpenApiTypes.INT,
+            location=OpenApiParameter.QUERY,
+            description='Page number for IN_PROGRESS column.',
+        ),
+        OpenApiParameter(
+            name='page_done',
+            type=OpenApiTypes.INT,
+            location=OpenApiParameter.QUERY,
+            description='Page number for DONE column.',
+        ),
+    ],
+    responses={
+        200: OpenApiResponse(description='Board data grouped by status.'),
+    },
+)
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def task_board_view(request):
@@ -132,7 +236,7 @@ def task_board_view(request):
     def paginate_column(status_value, page_param_name):
         column_qs = queryset.filter(
             status=status_value,
-            ).order_by('-created_at', '-id')
+        ).order_by('-created_at', '-id')
         paginator = Paginator(column_qs, page_size)
 
         try:
@@ -193,7 +297,10 @@ def task_board_view(request):
             'total': total,
             'by_status': {
                 'TO_DO': status_counts.get(Task.Status.TO_DO, 0),
-                'IN_PROGRESS': status_counts.get(Task.Status.IN_PROGRESS, 0),
+                'IN_PROGRESS': status_counts.get(
+                    Task.Status.IN_PROGRESS,
+                    0,
+                ),
                 'DONE': status_counts.get(Task.Status.DONE, 0),
             },
             'by_priority': {
@@ -207,12 +314,40 @@ def task_board_view(request):
             'TO_DO': paginate_column(Task.Status.TO_DO, 'page_todo'),
             'IN_PROGRESS': paginate_column(
                 Task.Status.IN_PROGRESS,
-                'page_in_progress'),
+                'page_in_progress',
+            ),
             'DONE': paginate_column(Task.Status.DONE, 'page_done'),
         },
     })
 
 
+@extend_schema(
+    parameters=[
+        OpenApiParameter(
+            name='search',
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+            description='Search in task title and description.',
+        ),
+        OpenApiParameter(
+            name='priority',
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+            enum=['LOW', 'MEDIUM', 'HIGH'],
+            description='Filter summary by priority.',
+        ),
+        OpenApiParameter(
+            name='status',
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+            enum=['TO_DO', 'IN_PROGRESS', 'DONE'],
+            description='Filter summary by status.',
+        ),
+    ],
+    responses={
+        200: OpenApiResponse(description='Task summary counters.'),
+    },
+)
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def task_summary_view(request):
@@ -263,7 +398,10 @@ def task_summary_view(request):
         'total': total,
         'by_status': {
             'TO_DO': status_counts.get(Task.Status.TO_DO, 0),
-            'IN_PROGRESS': status_counts.get(Task.Status.IN_PROGRESS, 0),
+            'IN_PROGRESS': status_counts.get(
+                Task.Status.IN_PROGRESS,
+                0,
+            ),
             'DONE': status_counts.get(Task.Status.DONE, 0),
         },
         'by_priority': {
