@@ -5,6 +5,8 @@ Test for models.
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
+from core import models
+
 
 class ModelTests(TestCase):
     """Test models."""
@@ -55,3 +57,24 @@ class ModelTests(TestCase):
         self.assertTrue(user.check_password(password))
         self.assertTrue(user.is_staff)
         self.assertTrue(user.is_superuser)
+
+    def test_create_task_success(self):
+        """Test creating a task is successful."""
+        user = get_user_model().objects.create_user(
+            email='taskuser@example.com',
+            password='testpass123',
+            name='Task User',
+        )
+
+        task = models.Task.objects.create(
+            user=user,
+            title='Prepare sprint report',
+            description='Collect metrics and summarize sprint progress.',
+            status=models.Task.Status.TO_DO,
+            priority=models.Task.Priority.HIGH,
+        )
+
+        self.assertEqual(str(task), task.title)
+        self.assertEqual(task.user, user)
+        self.assertEqual(task.status, models.Task.Status.TO_DO)
+        self.assertEqual(task.priority, models.Task.Priority.HIGH)

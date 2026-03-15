@@ -8,6 +8,8 @@ from django.contrib.auth.models import (
     PermissionsMixin,
 )
 from django.db import models
+from django.conf import settings
+from django.core.exceptions import ValidationError
 
 
 class UserManager(BaseUserManager):
@@ -46,3 +48,79 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
+
+
+class Task(models.Model):
+    """Task object."""
+
+    class Status(models.TextChoices):
+        TO_DO = 'TO_DO', 'To Do'
+        IN_PROGRESS = 'IN_PROGRESS', 'In Progress'
+        DONE = 'DONE', 'Done'
+
+    class Priority(models.TextChoices):
+        LOW = 'LOW', 'Low'
+        MEDIUM = 'MEDIUM', 'Medium'
+        HIGH = 'HIGH', 'High'
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='tasks',
+    )
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.TO_DO,
+    )
+    priority = models.CharField(
+        max_length=10,
+        choices=Priority.choices,
+        default=Priority.MEDIUM,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at', '-id']
+
+    def __str__(self):
+        """Return string representation of task."""
+        return self.title
+
+    @staticmethod
+    def valid_status_transitions():
+        return {
+            Task.Status.TO_DO: {
+                Task.Status.TO_DO,
+                Task.Status.IN_PROGRESS,
+            },
+            Task.Status.IN_PROGRESS: {
+                Task.Status.IN_PROGRESS,
+                Task.Status.TO_DO,
+                Task.Status.DONE,
+            },
+            Task.Status.DONE: {
+                Task.Status.DONE,
+                Task.Status.IN_PROGRESS,
+            },
+        }
+
+    def clean(self):
+        """Validate status transitions on update."""
+        if not self.pk:
+            return
+
+        previous = Task.objects.get(pk=self.pk)
+        allowed = self.valid_status_transitions().get(previous.status, {previous.status})
+
+        if self.status not in allowed:
+            raise ValidationError({
+                'status': f'Invalid status transition from {previous.status} to {self.status}.'
+            })
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)

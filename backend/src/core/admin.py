@@ -37,4 +37,21 @@ class UserAdmin(BaseUserAdmin):
     )
 
 
+class TaskAdmin(admin.ModelAdmin):
+    """Define the admin pages for tasks."""
+
+    ordering = ['-created_at']
+    list_display = [
+        'id',
+        'title',
+        'user',
+        'status',
+        'priority',
+        'created_at',
+        'modified_at',
+    ]
+    list_filter = ['status', 'priority']
+    search_fields = ['title', 'description', 'user__email', 'user__name']
+
 admin.site.register(models.User, UserAdmin)
+admin.site.register(models.Task, TaskAdmin)
