@@ -1,3 +1,4 @@
+import type { AxiosError } from 'axios'
 import { apiClient } from './client'
 import type {
   BoardParams,
@@ -33,21 +34,23 @@ export async function updateTask(id: number, data: UpdateTaskRequest) {
   try {
     const res = await apiClient.put<Task>(`${BASE}/${id}/`, data)
     return res.data
-  } catch (error: any) {
-  const data = error?.response?.data
+  } catch (error: unknown) {
+    const data = (error as AxiosError)?.response?.data as
+      | Record<string, unknown>
+      | undefined
 
-  let message = "Failed to update task"
+    let message = 'Failed to update task'
 
-  if (data?.status) {
-    message = Array.isArray(data.status)
-      ? data.status[0]
-      : data.status
-  } else if (data?.detail) {
-    message = data.detail
+    if (data?.status) {
+      message = Array.isArray(data.status)
+        ? String(data.status[0])
+        : String(data.status)
+    } else if (data?.detail) {
+      message = String(data.detail)
+    }
+
+    throw new Error(message)
   }
-
-  throw new Error(message)
-}
 }
 
 export async function patchTask(id: number, data: PatchTaskRequest) {

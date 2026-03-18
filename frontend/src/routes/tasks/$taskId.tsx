@@ -117,7 +117,9 @@ function TaskDetailPage() {
         <div className="flex gap-2">
           <EditTaskDialog
             task={task}
-            onSave={(data) => editMutation.mutateAsync(data).then(() => undefined)}
+            onSave={(data) =>
+              editMutation.mutateAsync(data).then(() => undefined)
+            }
           />
           <Button
             variant="destructive"

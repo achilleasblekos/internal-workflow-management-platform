@@ -71,8 +71,8 @@ export function EditTaskDialog({ task, onSave }: EditTaskDialogProps) {
       })
 
       setOpen(false)
-    } catch (err: any) {
-      setError(err.message || 'Failed to update task')
+    } catch (err: unknown) {
+      setError((err as Error).message || 'Failed to update task')
     }
   }
 

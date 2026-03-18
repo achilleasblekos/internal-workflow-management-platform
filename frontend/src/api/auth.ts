@@ -1,3 +1,4 @@
+import { AxiosError } from 'axios'
 import { apiClient, clearTokens, setTokens } from './client'
 import type {
   AuthTokenRequest,
@@ -8,6 +9,14 @@ import type {
   User,
 } from './types'
 
+type ApiErrorData = {
+  detail?: string
+  email?: string | string[]
+  password?: string | string[]
+  name?: string | string[]
+  [key: string]: unknown
+}
+
 const BASE = '/api/v1/user'
 
 export async function login(data: AuthTokenRequest) {
@@ -15,8 +24,8 @@ export async function login(data: AuthTokenRequest) {
     const res = await apiClient.post<AuthTokenResponse>(`${BASE}/login/`, data)
     setTokens(res.data.access, res.data.refresh)
     return res.data
-  } catch (error: any) {
-    const data = error?.response?.data
+  } catch (error: unknown) {
+    const data = (error as AxiosError<ApiErrorData>)?.response?.data
 
     let message = 'Login failed'
 
@@ -40,8 +49,8 @@ export async function register(data: CreateUserRequest) {
   try {
     const res = await apiClient.post<User>(`${BASE}/register/`, data)
     return res.data
-  } catch (error: any) {
-    const data = error?.response?.data
+  } catch (error: unknown) {
+    const data = (error as AxiosError<ApiErrorData>)?.response?.data
 
     let message = 'Registration failed'
 
@@ -70,8 +79,8 @@ export async function updateAccount(data: UpdateUserRequest) {
   try {
     const res = await apiClient.put<User>(`${BASE}/account/`, data)
     return res.data
-  } catch (error: any) {
-    const data = error?.response?.data
+  } catch (error: unknown) {
+    const data = (error as AxiosError)?.response?.data
 
     let message = 'Update failed'
 
@@ -89,8 +98,8 @@ export async function patchAccount(data: PatchUserRequest) {
   try {
     const res = await apiClient.patch<User>(`${BASE}/account/`, data)
     return res.data
-  } catch (error: any) {
-    const data = error?.response?.data
+  } catch (error: unknown) {
+    const data = (error as AxiosError)?.response?.data
 
     let message = 'Update failed'
 

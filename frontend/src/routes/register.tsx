@@ -46,8 +46,8 @@ function RegisterPage() {
         password: data.password,
       })
       await navigate({ to: '/login' })
-    } catch (err: any) {
-      setError(err.message || 'Registration failed')
+    } catch (err: unknown) {
+      setError((err as Error).message || 'Registration failed')
     }
   }
 

@@ -39,8 +39,8 @@ function LoginPage() {
     try {
       await login(data)
       await navigate({ to: '/' })
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong')
+    } catch (err: unknown) {
+      setError((err as Error).message || 'Something went wrong')
     }
   }
 
