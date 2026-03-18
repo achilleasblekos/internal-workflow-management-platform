@@ -12,7 +12,7 @@ from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken
 
 CREATE_USER_URL = reverse('user:register')
 TOKEN_URL = reverse('user:login')
-ME_URL = reverse('user:me')
+ME_URL = reverse('user:account')
 LOGOUT_URL = reverse('user:logout')
 
 

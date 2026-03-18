@@ -2,6 +2,7 @@
 Serializers for the user API View.
 """
 from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -13,7 +14,14 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ('email', 'password', 'name')
-        extra_kwargs = {'password': {'write_only': True, 'min_length': 5}}
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+
+    def validate_password(self, value):
+        """Validate password using Django validators."""
+        validate_password(value)
+        return value
 
     def create(self, validated_data):
         """Create a new user with encrypted password and return it."""
@@ -25,6 +33,7 @@ class UserSerializer(serializers.ModelSerializer):
         user = super().update(instance, validated_data)
 
         if password:
+            validate_password(password, user)
             user.set_password(password)
             user.save()
 

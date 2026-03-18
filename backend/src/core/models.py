@@ -9,7 +9,6 @@ from django.contrib.auth.models import (
 )
 from django.db import models
 from django.conf import settings
-from django.core.exceptions import ValidationError
 
 
 class UserManager(BaseUserManager):
@@ -54,7 +53,7 @@ class Task(models.Model):
     """Task object."""
 
     class Status(models.TextChoices):
-        TO_DO = 'TO_DO', 'To Do'
+        TO_DO = 'TO_DO', 'To-do'
         IN_PROGRESS = 'IN_PROGRESS', 'In Progress'
         DONE = 'DONE', 'Done'
 
@@ -107,26 +106,3 @@ class Task(models.Model):
                 Task.Status.IN_PROGRESS,
             },
         }
-
-    def clean(self):
-        """Validate status transitions on update."""
-        if not self.pk:
-            return
-
-        previous = Task.objects.get(pk=self.pk)
-        allowed = self.valid_status_transitions().get(
-            previous.status,
-            {previous.status},
-        )
-
-        if self.status not in allowed:
-            raise ValidationError({
-                'status': (
-                    'Invalid status transition from '
-                    f'{previous.status} to {self.status}.'
-                )
-            })
-
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        super().save(*args, **kwargs)

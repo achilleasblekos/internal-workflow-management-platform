@@ -1,7 +1,6 @@
 services:
   db:
     image: postgres:16-alpine
-    container_name: iwm_db
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:
@@ -9,14 +8,18 @@ services:
       POSTGRES_USER: workflow_user
       POSTGRES_PASSWORD: workflow_pass
     ports:
-      - "5432:5432"
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U workflow_user -d workflow_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   backend:
     build:
       context: ./backend
       args:
         DEV: "true"
-    container_name: iwm_backend
     ports:
       - "8000:8000"
     volumes:
@@ -26,12 +29,27 @@ services:
              python manage.py migrate &&
              python manage.py runserver 0.0.0.0:8000"
     environment:
-      DB_HOST: db
-      DB_NAME: workflow_db
-      DB_USER: workflow_user
-      DB_PASS: workflow_pass
+      DB_HOST: ${DB_HOST}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      SECRET_KEY: ${SECRET_KEY}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        DEV: "true"
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
 
 volumes:
   postgres_data:

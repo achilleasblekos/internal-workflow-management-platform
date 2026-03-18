@@ -63,10 +63,12 @@ class TaskSerializer(serializers.ModelSerializer):
                 {instance.status},
             )
             if new_status not in allowed:
+                from_status = Task.Status(instance.status).label
+                to_status = Task.Status(new_status).label
+
                 raise serializers.ValidationError({
                     'status': (
-                        f'Invalid status transition from '
-                        f'{instance.status} to {new_status}.'
+                        f"Cannot move task from {from_status} to {to_status}."
                     )
                 })
 
