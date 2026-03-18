@@ -13,14 +13,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
+      - name: Create backend environment file
+        run: cp backend/.env.example backend/.env
+
       - name: Build and start services
         run: docker compose up -d --build
-        env:
-          DB_HOST: db
-          DB_NAME: workflow_db
-          DB_USER: workflow_user
-          DB_PASS: workflow_pass
-          SECRET_KEY: dev-secret-key
 
       - name: Wait for database
         run: docker compose exec -T backend sh -c "python manage.py wait_for_db"
